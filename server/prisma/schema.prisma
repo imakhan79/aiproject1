@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile      Profile?
+  twin         FutureTwin?
+  simulations  Simulation[]
+  chatMessages ChatMessage[]
+  dreams       Dream[]
+}
+
+model Profile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  firstName        String
+  lastName         String?
+  age              Int?
+  educationLevel   String?
+  currentSkills    String[]
+  interests        String[]
+  careerGoals      String?
+  learningStyle    String?
+  personalityRaw   Json?
+  personalityType  String?
+
+  onboardingComplete Boolean @default(false)
+  profileVersion     Int     @default(1)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model FutureTwin {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  knowledgeDNA     Json
+  cognitiveProfile Json
+  learningStrengths Json
+  summaryNarrative String
+
+  generatedAt      DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Simulation {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  skillPaths String[]
+  results    Json
+
+  createdAt  DateTime @default(now())
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role      String
+  content   String
+
+  createdAt DateTime @default(now())
+}
+
+model Dream {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rawInput        String
+  title           String
+  structuredPlan  Json
+  learningRoadmap Json
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
