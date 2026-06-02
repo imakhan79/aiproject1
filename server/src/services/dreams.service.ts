@@ -1,15 +1,15 @@
-import { buildSystemBlocks, callClaude, ProfileContext, TwinContext } from './claude.service';
+import { buildSystemPrompt, callGemini, ProfileContext, TwinContext } from './claude.service';
 
-const ROLE = `You are NeuroVerse AI's Dream Capture system. You transform raw ideas and ambitions into structured, actionable project plans aligned to the user's current skills and goals. Always respond with valid JSON only, no markdown, no extra text.`;
+const ROLE = `You are NeuroVerse AI's Dream Capture system. Transform raw ideas and ambitions into structured, actionable project plans aligned to the user's current skills and goals. Always respond with valid JSON only, no markdown, no extra text.`;
 
 export async function processDream(
   profile: ProfileContext,
   twin: TwinContext | undefined,
   rawInput: string
 ): Promise<{ title: string; structuredPlan: unknown; learningRoadmap: unknown }> {
-  const systemBlocks = buildSystemBlocks(ROLE, profile, twin);
+  const systemPrompt = buildSystemPrompt(ROLE, profile, twin);
 
-  const userPrompt = `Transform this raw idea into a structured project plan:
+  const userMessage = `Transform this raw idea into a structured project plan:
 
 "${rawInput}"
 
@@ -19,7 +19,7 @@ Return JSON with this structure:
   "overview": "string (2-3 sentence project summary)",
   "phases": [
     {
-      "name": "string (phase name)",
+      "name": "string",
       "duration": "string (e.g. '2 weeks')",
       "tasks": ["string", "string"],
       "resources": ["string", "string"]
@@ -27,26 +27,19 @@ Return JSON with this structure:
   ],
   "learningRoadmap": {
     "milestones": [
-      {
-        "week": number,
-        "objective": "string",
-        "skills": ["string"]
-      }
+      { "week": number, "objective": "string", "skills": ["string"] }
     ]
   },
-  "marketOpportunity": "string (1-2 sentences on market potential)",
-  "fundingStrategy": "string (1-2 sentences on how to fund this)"
+  "marketOpportunity": "string (1-2 sentences)",
+  "fundingStrategy": "string (1-2 sentences)"
 }
 
-Create 3-5 phases. Create 4-8 milestones spread across 12 weeks. Align skills needed with the user's current background. Be specific and actionable.`;
+Create 3-5 phases and 4-8 milestones spread across 12 weeks.`;
 
-  const raw = await callClaude(
-    [{ role: 'user', content: userPrompt }],
-    systemBlocks,
-    4096
-  );
+  const raw = await callGemini(systemPrompt, userMessage, 4096);
+  const cleaned = raw.replace(/```json\n?|\n?```/g, '').trim();
+  const parsed = JSON.parse(cleaned);
 
-  const parsed = JSON.parse(raw);
   return {
     title: parsed.title,
     structuredPlan: {

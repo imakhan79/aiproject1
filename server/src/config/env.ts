@@ -6,7 +6,7 @@ dotenv.config();
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(1),
-  ANTHROPIC_API_KEY: z.string().min(1),
+  GEMINI_API_KEY: z.string().min(1),
   PORT: z.string().default('3001'),
   CLIENT_URL: z.string().default('http://localhost:5173'),
 });

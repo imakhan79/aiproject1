@@ -1,7 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { env } from '../config/env';
+import { Response } from 'express';
 
-const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+const MODEL = 'gemini-1.5-flash';
 
 export interface ProfileContext {
   firstName: string;
@@ -22,12 +24,13 @@ export interface TwinContext {
   summaryNarrative?: string;
 }
 
-export function buildSystemBlocks(
+export function buildSystemPrompt(
   roleInstruction: string,
   profile: ProfileContext,
   twin?: TwinContext
-): Anthropic.Messages.TextBlockParam[] {
-  const profileText = `
+): string {
+  return `${roleInstruction}
+
 USER PROFILE:
 Name: ${profile.firstName}${profile.lastName ? ' ' + profile.lastName : ''}
 Age: ${profile.age ?? 'Not specified'}
@@ -44,53 +47,50 @@ Cognitive Profile: ${JSON.stringify(twin.cognitiveProfile)}
 Learning Strengths: ${JSON.stringify(twin.learningStrengths)}
 Twin Summary: ${twin.summaryNarrative ?? ''}
 ` : ''}`.trim();
-
-  return [
-    { type: 'text', text: roleInstruction },
-    {
-      type: 'text',
-      text: profileText,
-      cache_control: { type: 'ephemeral' },
-    } as Anthropic.Messages.TextBlockParam & { cache_control: { type: 'ephemeral' } },
-  ];
 }
 
-export async function callClaude(
-  messages: Anthropic.Messages.MessageParam[],
-  systemBlocks: Anthropic.Messages.TextBlockParam[],
+export async function callGemini(
+  systemPrompt: string,
+  userMessage: string,
   maxTokens = 4096
 ): Promise<string> {
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: maxTokens,
-    system: systemBlocks,
-    messages,
+  const model = genAI.getGenerativeModel({
+    model: MODEL,
+    systemInstruction: systemPrompt,
+    generationConfig: { maxOutputTokens: maxTokens },
   });
 
-  const block = response.content[0];
-  if (block.type !== 'text') throw new Error('Unexpected response type from Claude');
-  return block.text;
+  const result = await model.generateContent(userMessage);
+  return result.response.text();
 }
 
-export async function streamClaude(
-  messages: Anthropic.Messages.MessageParam[],
-  systemBlocks: Anthropic.Messages.TextBlockParam[],
-  onChunk: (text: string) => void,
+export async function streamGemini(
+  systemPrompt: string,
+  history: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }>,
+  userMessage: string,
+  res: Response,
   onDone: (fullText: string) => void
 ): Promise<void> {
+  const model = genAI.getGenerativeModel({
+    model: MODEL,
+    systemInstruction: systemPrompt,
+    generationConfig: { maxOutputTokens: 2048 },
+  });
+
+  const chat = model.startChat({ history });
+  const result = await chat.sendMessageStream(userMessage);
+
   let full = '';
-  const stream = anthropic.messages.stream({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2048,
-    system: systemBlocks,
-    messages,
-  });
-
-  stream.on('text', (text) => {
+  for await (const chunk of result.stream) {
+    const text = chunk.text();
     full += text;
-    onChunk(text);
-  });
+    res.write(`data: ${JSON.stringify({ text })}\n\n`);
+  }
 
-  await stream.finalMessage();
+  res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+  res.end();
   onDone(full);
 }
+
+// Legacy aliases used by services
+export const buildSystemBlocks = buildSystemPrompt;
