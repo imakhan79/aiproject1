@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
 
 const TOTAL_STEPS = 7;
 
@@ -69,9 +70,14 @@ function TagInput({ tags, onChange, placeholder }: { tags: string[]; onChange: (
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -107,7 +113,10 @@ export default function Onboarding() {
       await api.post('/twin/generate');
       await refreshUser();
       navigate('/dashboard');
-    } catch {
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Something went wrong. Please try again.';
+      toast.error(msg);
+    } finally {
       setLoading(false);
     }
   };

@@ -15,38 +15,38 @@ export default function Landing() {
     <div className="min-h-screen bg-navy">
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="gradient-text text-xl font-bold">NeuroVerse AI</span>
-          <div className="flex items-center gap-4">
-            <Link to="/login" className="text-slate-300 hover:text-white text-sm transition-colors">Sign In</Link>
-            <Link to="/signup" className="px-4 py-2 bg-gradient-to-r from-purple to-cyan text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity">
-              Get Started Free
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between gap-3">
+          <span className="gradient-text text-lg md:text-xl font-bold whitespace-nowrap">NeuroVerse AI</span>
+          <div className="flex items-center gap-2 md:gap-4">
+            <Link to="/login" className="text-slate-300 hover:text-white text-sm transition-colors hidden sm:block">Sign In</Link>
+            <Link to="/signup" className="px-3 md:px-4 py-2 bg-gradient-to-r from-purple to-cyan text-white text-xs md:text-sm font-medium rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap">
+              Get Started
             </Link>
           </div>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="pt-32 pb-24 px-6 text-center relative overflow-hidden">
+      <section className="pt-24 md:pt-32 pb-16 md:pb-24 px-4 md:px-6 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-radial from-purple/10 via-transparent to-transparent" />
         <div className="relative max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 glass rounded-full text-xs text-cyan mb-6 border border-cyan/20">
+          <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 glass rounded-full text-xs text-cyan mb-5 md:mb-6 border border-cyan/20">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse" />
             World's First Human Potential Operating System
           </div>
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-5 md:mb-6 leading-tight">
             Your AI Future Twin<br />
             <span className="gradient-text">Knows Your Best Life</span>
           </h1>
-          <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base md:text-xl text-slate-400 mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed">
             Stop guessing. NeuroVerse simulates millions of possible futures for you, identifies your highest potential path, and guides you step by step.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
             <Link to="/signup"
-              className="px-8 py-4 bg-gradient-to-r from-purple to-cyan text-white font-semibold rounded-2xl hover:opacity-90 transition-opacity text-lg glow-purple">
+              className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-purple to-cyan text-white font-semibold rounded-2xl hover:opacity-90 transition-opacity text-base md:text-lg glow-purple">
               Build My Future Twin →
             </Link>
-            <Link to="/login" className="px-8 py-4 glass border border-white/20 text-white font-medium rounded-2xl hover:bg-white/5 transition-all text-lg">
+            <Link to="/login" className="px-6 md:px-8 py-3 md:py-4 glass border border-white/20 text-white font-medium rounded-2xl hover:bg-white/5 transition-all text-base md:text-lg sm:hidden block">
               Sign In
             </Link>
           </div>
