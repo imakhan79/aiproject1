@@ -252,4 +252,38 @@ app.delete('/api/dreams/:id', auth, async (req, res) => {
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
+// ─── Invention Lab ─────────────────────────────────────────────────────────────
+app.post('/api-features/invention', auth, aiLimiter, async (req, res) => {
+  const userId = (req as express.Request & { userId: string }).userId;
+  const { idea } = z.object({ idea: z.string().min(10).max(1000) }).parse(req.body);
+  const profile = await prisma.profile.findUnique({ where: { userId } });
+  if (!profile) { res.status(400).json({ error: 'Complete onboarding first' }); return; }
+  const sys = buildSysPrompt('You are NeuroVerse AI Invention Lab. You are a world-class startup advisor, product designer, and market researcher. Return valid JSON only, no markdown.', profile);
+  const raw = await callGemini(sys, `Analyze this invention idea deeply: "${idea}"\n\nReturn JSON: {"productName":"","tagline":"","problemStatement":"","solution":"","targetMarket":"","marketSize":"","revenueModel":"","competitorAnalysis":["competitor + 1 weakness"],"uniqueAdvantages":["advantage"],"mvpFeatures":["feature"],"techStack":["tech"],"patentAngles":["angle"],"pitchDeckOutline":["slide: content"],"fundingStrategy":"","timeToMarket":"","successProbability":number(0-100)}`, 4096);
+  res.json(JSON.parse(raw));
+});
+
+// ─── Time Machine Learning ─────────────────────────────────────────────────────
+app.post('/api-features/time-machine', auth, aiLimiter, async (req, res) => {
+  const userId = (req as express.Request & { userId: string }).userId;
+  const profile = await prisma.profile.findUnique({ where: { userId } });
+  if (!profile) { res.status(400).json({ error: 'Complete onboarding first' }); return; }
+  const twin = await prisma.futureTwin.findUnique({ where: { userId } });
+  const sys = buildSysPrompt('You are NeuroVerse Time Machine. Analyze future job market trends from 2025-2035 and give personalized predictions. Return valid JSON only.', profile, twin);
+  const raw = await callGemini(sys, `Analyze the job market future for this user. Return JSON: {"personalNarrative":"2-3 sentences about their specific future","trends":[{"year":number,"title":"","description":"","jobsCreated":"e.g. 2M new roles","jobsDestroyed":"e.g. 500k roles","keySkills":["skill"],"urgency":"now|soon|future","relevanceScore":number(0-100)}],"criticalSkillsToLearnNow":["skill"],"skillsBecomingObsolete":["skill"],"yourBestOpportunities":["opportunity"],"weeklyLearningPlan":[{"day":"Mon","task":"","duration":"30 min"}],"futureYouIn5Years":"inspiring 2-sentence vision"}\n\nInclude 5-7 trends from 2026-2035. Make it highly specific to this user's profile.`, 6000);
+  res.json(JSON.parse(raw));
+});
+
+// ─── Skill Gap Analyzer ────────────────────────────────────────────────────────
+app.post('/api-features/skill-gap', auth, aiLimiter, async (req, res) => {
+  const userId = (req as express.Request & { userId: string }).userId;
+  const { dreamRole } = z.object({ dreamRole: z.string().min(3).max(200) }).parse(req.body);
+  const profile = await prisma.profile.findUnique({ where: { userId } });
+  if (!profile) { res.status(400).json({ error: 'Complete onboarding first' }); return; }
+  const twin = await prisma.futureTwin.findUnique({ where: { userId } });
+  const sys = buildSysPrompt('You are NeuroVerse Skill Gap Analyzer. Be brutally honest and highly specific. Return valid JSON only.', profile, twin);
+  const raw = await callGemini(sys, `Analyze this user's readiness for: "${dreamRole}"\n\nReturn JSON: {"dreamRole":"${dreamRole}","company":"extracted company if any","readinessScore":number(0-100),"timeToReady":"e.g. 6 months","matchedSkills":["skill they already have"],"missingSkills":[{"skill":"","importance":"critical|important|nice","learningTime":"e.g. 2 weeks","resources":["resource name"]}],"personalityFit":"1-2 sentence assessment","salaryRange":"e.g. $120k-$160k","learningPath":[{"week":"Week 1-2","milestone":"","skills":["skill"]}],"quickWins":["actionable win"],"hardTruths":"1-2 honest sentences"}\n\nBe specific to their actual current skills vs what the role requires.`, 5000);
+  res.json(JSON.parse(raw));
+});
+
 export default app;

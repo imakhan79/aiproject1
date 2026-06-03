@@ -10,6 +10,9 @@ import Simulation from './pages/Simulation';
 import Coach from './pages/Coach';
 import Dreams from './pages/Dreams';
 import AppShell from './components/layout/AppShell';
+import InventionLab from './pages/InventionLab';
+import TimeMachine from './pages/TimeMachine';
+import SkillGap from './pages/SkillGap';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -54,6 +57,9 @@ export default function App() {
       <Route path="/simulation" element={<ProtectedRoute><Simulation /></ProtectedRoute>} />
       <Route path="/coach" element={<ProtectedRoute><Coach /></ProtectedRoute>} />
       <Route path="/dreams" element={<ProtectedRoute><Dreams /></ProtectedRoute>} />
+      <Route path="/invention-lab" element={<ProtectedRoute><InventionLab /></ProtectedRoute>} />
+      <Route path="/time-machine" element={<ProtectedRoute><TimeMachine /></ProtectedRoute>} />
+      <Route path="/skill-gap" element={<ProtectedRoute><SkillGap /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
