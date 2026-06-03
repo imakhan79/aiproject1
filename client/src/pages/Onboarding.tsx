@@ -99,6 +99,7 @@ export default function Onboarding() {
   const submit = async () => {
     setLoading(true);
     try {
+      // 1. Save profile (fast)
       await api.post('/profile', {
         firstName, lastName: lastName || undefined,
         age: age ? parseInt(age) : undefined,
@@ -110,9 +111,17 @@ export default function Onboarding() {
         personalityType: personalityType.length === 4 ? personalityType : undefined,
         onboardingComplete: true,
       });
-      await api.post('/twin/generate');
+
+      // 2. Navigate to dashboard immediately — don't wait for twin
       await refreshUser();
       navigate('/dashboard');
+      toast.success('Profile saved! Generating your AI Future Twin...');
+
+      // 3. Generate twin in background (non-blocking)
+      api.post('/twin/generate').catch(() => {
+        toast.error('Twin generation failed — click Regenerate on the Twin page.');
+      });
+
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Something went wrong. Please try again.';
       toast.error(msg);

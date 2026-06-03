@@ -132,7 +132,7 @@ app.post('/api/twin/generate', auth, aiLimiter, async (req, res) => {
   const profile = await prisma.profile.findUnique({ where: { userId } });
   if (!profile) { res.status(400).json({ error: 'Complete onboarding first' }); return; }
   const sys = buildSysPrompt('You are NeuroVerse AI Future Twin Generator. Return valid JSON only.', profile);
-  const raw = await callGemini(sys, `Generate AI Future Twin JSON: { "knowledgeDNA": { "domains": [{"name","score","description"}] }, "cognitiveProfile": { "strengths":[], "blindSpots":[], "learningVelocity":"", "thinkingStyle":"" }, "learningStrengths": { "dimensions": [{"name","score"}] }, "summaryNarrative":"" }. Use 6-8 domains, 5-7 dimensions. Base on user profile.`, 8192);
+  const raw = await callGemini(sys, `Generate AI Future Twin JSON with exactly this structure (no extra text): {"knowledgeDNA":{"domains":[{"name":"string","score":number,"description":"string"}]},"cognitiveProfile":{"strengths":["string","string","string"],"blindSpots":["string","string"],"learningVelocity":"fast|moderate|steady","thinkingStyle":"string"},"learningStrengths":{"dimensions":[{"name":"string","score":number}]},"summaryNarrative":"string"}\nUse 6 domains, 5 dimensions. Be specific to this user.`, 2048);
   const parsed = JSON.parse(raw);
   const twin = await prisma.futureTwin.upsert({ where: { userId }, update: { ...parsed, updatedAt: new Date() }, create: { userId, ...parsed } });
   res.json(twin);
